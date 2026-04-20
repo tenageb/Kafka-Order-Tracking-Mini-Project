@@ -1,0 +1,32 @@
+import json
+import uuid
+
+from confluent_kafka import Producer
+
+producer_config = {
+    'bootstrap.servers': 'localhost:9092',  # that acts as the starting point for a Kafka client
+                                            # to discover the full set of alive servers in the cluster
+}
+
+producer = Producer(producer_config)  # bootstrap.servers provides the initial hosts
+
+def delivery_report(err, msg):
+    if err:
+        print(f'❌ delivery failed:{err}')
+    else:
+        print(f' ✅ delivered {msg.value().decode("utf-8")}')
+        print(dir(msg))
+
+order = {
+    "order_id": str(uuid.uuid4()),
+    "user": "Abebech",
+    "items": "Enjera",
+    "quantity": 10
+} 
+value = json.dumps(order).encode("utf-8") 
+producer.produce(
+    topic="orders",
+    value=value,
+    callback = delivery_report
+)
+producer.flush()
